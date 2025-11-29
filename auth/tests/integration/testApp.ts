@@ -1,5 +1,5 @@
 import express, { Express } from 'express';
-import authRoutes from '../../src/routes/authRoutes';
+import authRoutes from '../../src/routes/apiRoutes';
 import healthRoute from '../../src/routes/healthRoute';
 import { errorHandler } from '../../src/middleware/errorHandler';
 

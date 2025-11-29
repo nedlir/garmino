@@ -15,6 +15,7 @@ export const startServer = async (app: Express, port: number) => {
 
     app.listen(port, () => {
       logger.info(`Auth service running on port ${port}`);
+      logger.info(`Swagger docs available at http://localhost:${port}/api-docs`);
     });
   } catch (error) {
     logger.error({ error }, 'Failed to start server');
