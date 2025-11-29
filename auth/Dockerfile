@@ -4,9 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm install --omit=dev
 
-COPY . .
+COPY src ./src
+COPY tsconfig.json ./
 
 EXPOSE 3000
 
