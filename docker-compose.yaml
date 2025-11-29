@@ -36,8 +36,9 @@ services:
       - redis
     volumes:
       - ./auth/src:/app/src
-      - /app/node_modules
+      - auth-node-modules:/app/node_modules
 
 volumes:
   auth-postgres-data:
   redis-data:
+  auth-node-modules:
