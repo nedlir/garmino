@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import { Express } from 'express';
-import { setupTestContainers, teardownTestContainers, cleanupDatabase, TestContext } from './config';
+import { setupTestContainers, teardownTestContainers, cleanupDatabase, TestContext } from '../config';
 import jwt from 'jsonwebtoken';
 
 let testContext: TestContext;
@@ -22,7 +22,7 @@ describe('POST /auth/logout - Integration Tests', () => {
     testContext = await setupTestContainers();
     
     // Import app modules AFTER env vars are set
-    const { createTestApp } = await import('./testApp');
+    const { createTestApp } = await import('../testApp');
     app = createTestApp();
   });
 

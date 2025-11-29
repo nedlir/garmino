@@ -10,9 +10,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/unit tests/db tests/integration/auth.test.ts",
-    "test:integration": "vitest run tests/integration/*.integration.test.ts",
-    "test:integration:watch": "vitest tests/integration/**/*.integration.test.ts",
-    "test:integration:coverage": "vitest run --coverage tests/integration/**/*.integration.test.ts",
+    "test:integration": "vitest run tests/integration/endpoints/*.test.ts",
+    "test:integration:watch": "vitest tests/integration/endpoints/*.test.ts",
+    "test:integration:coverage": "vitest run --coverage tests/integration/endpoints/*.test.ts",
     "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {

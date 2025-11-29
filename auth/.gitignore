@@ -1,2 +1,5 @@
 .env
 node_modules
+dist
+coverage
+.test-config.json
