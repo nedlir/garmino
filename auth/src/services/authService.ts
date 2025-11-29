@@ -131,19 +131,27 @@ export const logout = async (
   try {
     logger.info('User logout');
 
-    // Decode JWT to get JTI
-    const decoded = tokenService.decodeAccessToken(accessToken);
-    if (!decoded) {
-      logger.warn('Invalid access token for logout');
+    // Verify JWT (this will throw if invalid or expired)
+    const payload = tokenService.verifyAccessToken(accessToken);
+
+    // Check if already blacklisted
+    const isBlacklisted = await tokenService.isTokenBlacklisted(payload.jti);
+    if (isBlacklisted) {
+      logger.warn({ jti: payload.jti }, 'Token is already blacklisted');
       throw new Error('Invalid access token');
     }
 
-    await tokenService.blacklistAccessToken(decoded.jti);
+    await tokenService.blacklistAccessToken(payload.jti);
 
     await tokenService.revokeRefreshToken(refreshToken);
 
-    logger.info({ userId: decoded.userId, jti: decoded.jti }, 'User logged out successfully');
-  } catch (err) {
+    logger.info({ userId: payload.userId, jti: payload.jti }, 'User logged out successfully');
+  } catch (err: any) {
+    // Re-throw token validation errors with consistent message
+    if (err.message === 'Invalid token' || err.message === 'Token expired') {
+      logger.warn({ err: err.message }, 'Invalid access token for logout');
+      throw new Error('Invalid access token');
+    }
     logger.error({ err }, 'Error logging out user');
     throw err;
   }
