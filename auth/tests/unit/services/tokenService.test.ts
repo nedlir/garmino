@@ -5,7 +5,7 @@ import {
   verifyAccessToken,
   decodeAccessToken,
   parseExpiration,
-} from '../../src/services/tokenService';
+} from '../../../src/services/tokenService';
 
 describe('tokenService', () => {
   const testUserId = '550e8400-e29b-41d4-a716-446655440000';
