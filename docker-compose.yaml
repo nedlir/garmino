@@ -1,0 +1,43 @@
+services:
+  auth-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+      POSTGRES_DB: authdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth-postgres-data:/var/lib/postgresql/data
+      - ./auth/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  auth:
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://authuser:authpass@auth-postgres:5432/authdb
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: secret-key
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+    depends_on:
+      - auth-postgres
+      - redis
+    volumes:
+      - ./auth/src:/app/src
+      - /app/node_modules
+
+volumes:
+  auth-postgres-data:
+  redis-data:
