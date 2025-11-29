@@ -1,4 +1,4 @@
-import pool from '../../config/postgres';
+import pool from '../../config/db/postgres';
 import { logger } from '../../utils/logger';
 import {
   UserCredSchema,

@@ -1,4 +1,4 @@
-import redis from '../../config/redis';
+import redis from '../../config/db/redis';
 import { logger } from '../../utils/logger';
 import {
   RefreshTokenSchema,
