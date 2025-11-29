@@ -19,6 +19,10 @@ export const parseExpiration = (expiration: string): number => {
   const unit = expiration.slice(-1);
   const value = parseInt(expiration.slice(0, -1), 10);
 
+  if (isNaN(value)) {
+    throw new Error(`Invalid expiration format: ${expiration}`);
+  }
+
   switch (unit) {
     case TimeUnit.SECONDS:
       return value;
