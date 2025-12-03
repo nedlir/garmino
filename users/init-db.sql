@@ -26,12 +26,12 @@ CREATE TABLE garmin_connections (
 
 -- Trigger for auto-updating updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
   NEW.updated_at = CURRENT_TIMESTAMP;
   RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;
 
 -- Automatically update updated_at for user_profiles
 CREATE TRIGGER update_user_profiles_updated_at
