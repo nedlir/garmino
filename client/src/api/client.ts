@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000';
+import { API_CONFIG } from '../config/api';
 
 const defaultHeaders = {
   'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ export interface UserListItem {
 }
 
 export const register = async (payload: RegisterPayload): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
+  const response = await fetch(`${API_CONFIG.baseURL}/auth/register`, {
     method: 'POST',
     headers: defaultHeaders,
     body: JSON.stringify(payload),
@@ -50,7 +50,7 @@ export const register = async (payload: RegisterPayload): Promise<AuthResponse> 
 };
 
 export const login = async (payload: LoginPayload): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  const response = await fetch(`${API_CONFIG.baseURL}/auth/login`, {
     method: 'POST',
     headers: defaultHeaders,
     body: JSON.stringify(payload),
@@ -65,7 +65,7 @@ export const login = async (payload: LoginPayload): Promise<AuthResponse> => {
 };
 
 export const getAllUsers = async (accessToken: string): Promise<UserListItem[]> => {
-  const response = await fetch(`${API_BASE_URL}/users`, {
+  const response = await fetch(`${API_CONFIG.baseURL}/users`, {
     method: 'GET',
     headers: authHeaders(accessToken),
   });
@@ -79,7 +79,7 @@ export const getAllUsers = async (accessToken: string): Promise<UserListItem[]> 
 };
 
 export const refreshAccessToken = async (refreshToken: string): Promise<AuthResponse> => {
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+  const response = await fetch(`${API_CONFIG.baseURL}/auth/refresh`, {
     method: 'POST',
     headers: defaultHeaders,
     body: JSON.stringify({ refreshToken }),

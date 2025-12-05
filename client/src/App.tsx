@@ -1,9 +1,7 @@
+import { AppRoutes } from './router';
+
 function App() {
-  return (
-    <div>
-      <div>Minimal Client</div>
-    </div>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
