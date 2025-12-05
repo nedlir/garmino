@@ -11,6 +11,18 @@ services:
       - auth-postgres-data:/var/lib/postgresql/data
       - ./auth/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
+  users-postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: usersuser
+      POSTGRES_PASSWORD: userspass
+      POSTGRES_DB: usersdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - users-postgres-data:/var/lib/postgresql/data
+      - ./users/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+
   redis:
     image: redis:7-alpine
     ports:
@@ -38,7 +50,46 @@ services:
       - ./auth/src:/app/src
       - auth-node-modules:/app/node_modules
 
+  users:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      DATABASE_URL: postgresql://usersuser:userspass@users-postgres:5432/usersdb
+    depends_on:
+      - users-postgres
+    volumes:
+      - ./users/src:/app/src
+      - users-node-modules:/app/node_modules
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: secret-key
+      AUTH_SERVICE_URL: http://auth:3000
+      USERS_SERVICE_URL: http://users:3002
+      GARMIN_SERVICE_URL: http://garmin-connect:3003
+    depends_on:
+      - redis
+      - auth
+      - users
+    volumes:
+      - ./gateway/src:/app/src
+      - gateway-node-modules:/app/node_modules
+
 volumes:
   auth-postgres-data:
+  users-postgres-data:
   redis-data:
   auth-node-modules:
+  users-node-modules:
+  gateway-node-modules:
