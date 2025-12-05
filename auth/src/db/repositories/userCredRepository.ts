@@ -9,6 +9,19 @@ import {
   type UpdateUserCred,
 } from '../schemas/userCred.schema';
 
+export const findAll = async (): Promise<UserCred[]> => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM user_creds ORDER BY created_at DESC'
+    );
+
+    return result.rows.map((row: unknown) => UserCredSchema.parse(row));
+  } catch (err) {
+    logger.error({ err }, 'Error finding all users');
+    throw err;
+  }
+};
+
 export const findById = async (id: string): Promise<UserCred | null> => {
   try {
     const result = await pool.query(
@@ -50,10 +63,10 @@ export const create = async (data: CreateUserCred): Promise<UserCred> => {
     const validated = CreateUserCredSchema.parse(data);
 
     const result = await pool.query(
-      `INSERT INTO user_creds (email, password_hash)
-       VALUES ($1, $2)
+      `INSERT INTO user_creds (email, password_hash, role)
+       VALUES ($1, $2, $3)
        RETURNING *`,
-      [validated.email, validated.password_hash]
+      [validated.email, validated.password_hash, validated.role]
     );
 
     return UserCredSchema.parse(result.rows[0]);

@@ -39,13 +39,15 @@ export const parseExpiration = (expiration: string): number => {
 
 export const generateAccessToken = (
   userId: string,
-  email: string
+  email: string,
+  role: 'user' | 'admin' = 'user'
 ): string => {
   try {
     const jti = uuidv4();
     const payload: Omit<TokenPayload, 'iat' | 'exp'> = {
       userId,
       email,
+      role,
       jti,
     };
 

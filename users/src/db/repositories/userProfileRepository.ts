@@ -9,6 +9,19 @@ import {
   type UpdateUserProfile,
 } from '../schemas/userProfile.schema';
 
+export const findAll = async (): Promise<UserProfile[]> => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM user_profiles ORDER BY created_at DESC'
+    );
+
+    return result.rows.map(row => UserProfileSchema.parse(row));
+  } catch (err) {
+    logger.error({ err }, 'Error finding all user profiles');
+    throw err;
+  }
+};
+
 export const findById = async (userId: string): Promise<UserProfile | null> => {
   try {
     const result = await pool.query(

@@ -9,7 +9,7 @@ export interface UserListItem {
 
 export const getAllUsers = async (accessToken: string): Promise<UserListItem[]> => {
   try {
-    const response = await axiosInstance.get<UserListItem[]>('/users', {
+    const response = await axiosInstance.get<UserListItem[]>('/auth/users', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

@@ -19,7 +19,9 @@ export const createAuthMiddleware = (
     try {
       const route = routes.find((r) => req.path.startsWith(r.pathPrefix));
 
-      if (!route || !route.requiresAuth) {
+      const isProtectedPath = route?.protectedPaths?.some((p) => req.path.startsWith(p));
+      
+      if (!route || (!route.requiresAuth && !isProtectedPath)) {
         logger.debug({ path: req.path }, 'Public route, skipping auth');
         return next();
       }
@@ -52,9 +54,10 @@ export const createAuthMiddleware = (
       }
 
       req.headers['x-user-id'] = payload.userId;
+      req.headers['x-user-role'] = payload.role;
       req.userId = payload.userId;
 
-      logger.debug({ userId: payload.userId, path: req.path }, 'Request authenticated');
+      logger.debug({ userId: payload.userId, role: payload.role, path: req.path }, 'Request authenticated');
       next();
     } catch (err) {
       logger.error({ err, path: req.path }, 'Error in auth middleware');

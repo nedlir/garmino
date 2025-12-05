@@ -102,3 +102,21 @@ export const verify = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const role = req.headers['x-user-role'] as string;
+
+    if (role !== 'admin') {
+      res.status(403).json({ error: 'Forbidden', message: 'Admin access required' });
+      return;
+    }
+
+    const users = await authService.getAllUsers();
+    res.status(200).json(users);
+  } catch (err) {
+    logger.error({ err }, 'Error in getAllUsers controller');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

@@ -1,12 +1,12 @@
 import { z } from 'zod';
+import { RoleSchema } from '../../db/schemas/userCred.schema';
 
 export const AuthResponseSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string().uuid(),
-  user: z.object({
-    id: z.string().uuid(),
-    email: z.string().email(),
-  }),
+  userId: z.string().uuid(),
+  email: z.string().email(),
+  role: RoleSchema,
 });
 
 export const VerifyResponseSchema = z.object({

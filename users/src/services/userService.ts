@@ -11,7 +11,14 @@ export interface GarminStatus {
   isActive: boolean;
 }
 
+export interface UserListItem {
+  userId: string;
+  email: string;
+  username: string | null;
+}
+
 export interface IUserService {
+  getAllUsers(): Promise<UserListItem[]>;
   getProfile(userId: string): Promise<UserProfile | null>;
   updateProfile(userId: string, requesterId: string, updates: UpdateUserProfile): Promise<UserProfile>;
   getGarminStatus(userId: string): Promise<GarminStatus>;
@@ -19,6 +26,21 @@ export interface IUserService {
 }
 
 export class UserService implements IUserService {
+  async getAllUsers(): Promise<UserListItem[]> {
+    try {
+      logger.info('Getting all users');
+      const profiles = await userProfileRepository.findAll();
+      return profiles.map(profile => ({
+        userId: profile.user_id,
+        email: profile.email || '',
+        username: profile.username,
+      }));
+    } catch (err) {
+      logger.error({ err }, 'Error getting all users');
+      throw err;
+    }
+  }
+
   async getProfile(userId: string): Promise<UserProfile | null> {
     try {
       logger.info({ userId }, 'Getting user profile');

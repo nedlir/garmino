@@ -4,6 +4,7 @@ export interface RouteConfig {
   targetPort: number;
   requiresAuth: boolean;
   publicPaths?: string[];  // Paths that don't require auth even if requiresAuth is true
+  protectedPaths?: string[];  // Paths that require auth even if requiresAuth is false
 }
 
 export const routes: RouteConfig[] = [
@@ -11,7 +12,8 @@ export const routes: RouteConfig[] = [
     pathPrefix: '/auth', 
     targetService: 'auth', 
     targetPort: 3000, 
-    requiresAuth: false 
+    requiresAuth: false,
+    protectedPaths: ['/auth/users'],  // Paths that require auth even if requiresAuth is false
   },
   { 
     pathPrefix: '/users', 

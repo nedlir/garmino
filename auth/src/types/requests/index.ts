@@ -1,8 +1,10 @@
 import { z } from 'zod';
+import { RoleSchema } from '../../db/schemas/userCred.schema';
 
 export const RegisterRequestSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  role: RoleSchema.optional().default('user'),
 });
 
 export const LoginRequestSchema = z.object({

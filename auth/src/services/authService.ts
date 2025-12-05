@@ -16,9 +16,10 @@ export const register = async (
     const user = await userCredRepository.create({
       email: data.email,
       password_hash: passwordHash,
+      role: data.role || 'user',
     });
 
-    const accessToken = tokenService.generateAccessToken(user.id, user.email);
+    const accessToken = tokenService.generateAccessToken(user.id, user.email, user.role);
     const refreshToken = tokenService.generateRefreshToken();
 
     await tokenService.storeRefreshToken(refreshToken, user.id);
@@ -28,10 +29,9 @@ export const register = async (
     return {
       accessToken,
       refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     };
   } catch (err) {
     logger.error({ err, email: data.email }, 'Error registering user');
@@ -62,7 +62,7 @@ export const login = async (data: LoginRequest): Promise<AuthResponse> => {
 
     await userCredRepository.updateLastLogin(user.id);
 
-    const accessToken = tokenService.generateAccessToken(user.id, user.email);
+    const accessToken = tokenService.generateAccessToken(user.id, user.email, user.role);
     const refreshToken = tokenService.generateRefreshToken();
 
     await tokenService.storeRefreshToken(refreshToken, user.id);
@@ -72,10 +72,9 @@ export const login = async (data: LoginRequest): Promise<AuthResponse> => {
     return {
       accessToken,
       refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     };
   } catch (err) {
     logger.error({ err, email: data.email }, 'Error logging in user');
@@ -101,7 +100,7 @@ export const refresh = async (refreshToken: string): Promise<AuthResponse> => {
       throw new Error('User not found');
     }
 
-    const newAccessToken = tokenService.generateAccessToken(user.id, user.email);
+    const newAccessToken = tokenService.generateAccessToken(user.id, user.email, user.role);
     const newRefreshToken = tokenService.generateRefreshToken();
 
     await tokenService.revokeRefreshToken(refreshToken);
@@ -113,10 +112,9 @@ export const refresh = async (refreshToken: string): Promise<AuthResponse> => {
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-      },
+      userId: user.id,
+      email: user.email,
+      role: user.role,
     };
   } catch (err) {
     logger.error({ err }, 'Error refreshing access token');
@@ -180,5 +178,27 @@ export const verifyToken = async (
   } catch (err) {
     logger.warn({ err }, 'Token verification failed');
     return { valid: false };
+  }
+};
+
+
+export interface UserListItem {
+  userId: string;
+  email: string;
+  role: 'user' | 'admin';
+}
+
+export const getAllUsers = async (): Promise<UserListItem[]> => {
+  try {
+    logger.info('Getting all users');
+    const users = await userCredRepository.findAll();
+    return users.map(user => ({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    }));
+  } catch (err) {
+    logger.error({ err }, 'Error getting all users');
+    throw err;
   }
 };
