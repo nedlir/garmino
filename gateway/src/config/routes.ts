@@ -10,7 +10,7 @@ export const routes: RouteConfig[] = [
   { 
     pathPrefix: '/auth', 
     targetService: 'auth', 
-    targetPort: 3001, 
+    targetPort: 3000, 
     requiresAuth: false 
   },
   { 

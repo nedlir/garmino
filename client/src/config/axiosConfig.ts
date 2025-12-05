@@ -1,9 +1,8 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { getTokens, clearTokens, saveTokens, saveUser } from '../utils/storage';
 
-// Create and configure axios instance
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3001',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -107,5 +106,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Export the configured axios instance as default
 export default axiosInstance;

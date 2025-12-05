@@ -6,13 +6,13 @@ interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
-  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
-  clearAuth: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  clearAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => {
+export const useAuthStore = create<AuthState>((set) => {
   const tokens = getTokens();
   const user = getUser();
 
@@ -20,24 +20,30 @@ export const useAuthStore = create<AuthState>((set, get) => {
     user: user,
     accessToken: tokens?.accessToken || null,
     refreshToken: tokens?.refreshToken || null,
+    isAuthenticated: !!tokens?.accessToken,
+    isAdmin: user?.role === 'admin',
     
     setAuth: (user: User, accessToken: string, refreshToken: string) => {
       saveTokens(accessToken, refreshToken);
       saveUser(user);
-      set({ user, accessToken, refreshToken });
+      set({ 
+        user, 
+        accessToken, 
+        refreshToken,
+        isAuthenticated: true,
+        isAdmin: user.role === 'admin',
+      });
     },
     
     clearAuth: () => {
       clearTokens();
-      set({ user: null, accessToken: null, refreshToken: null });
-    },
-    
-    get isAuthenticated() {
-      return !!get().accessToken;
-    },
-    
-    get isAdmin() {
-      return get().user?.role === 'admin';
+      set({ 
+        user: null, 
+        accessToken: null, 
+        refreshToken: null,
+        isAuthenticated: false,
+        isAdmin: false,
+      });
     },
   };
 });

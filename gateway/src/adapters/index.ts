@@ -1,2 +1,2 @@
-export { IProtocolAdapter, GatewayRequest, GatewayResponse, Protocol } from './IProtocolAdapter';
+export { IProtocolAdapter } from './IProtocolAdapter';
 export { HttpProtocolAdapter } from './HttpProtocolAdapter';

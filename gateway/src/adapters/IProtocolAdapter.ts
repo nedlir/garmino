@@ -1,26 +1,8 @@
-export type Protocol = 'http' | 'websocket' | 'grpc';
-
-
-export interface GatewayRequest {
-  method: string;
-  path: string;
-  headers: Record<string, string>;
-  body?: unknown;
-  query?: Record<string, string>;
-  protocol: Protocol;
-}
-
-export interface GatewayResponse {
-  status: number;
-  headers: Record<string, string>;
-  body?: unknown;
-}
+import { Request, Response } from 'express';
 
 export interface IProtocolAdapter {
   name: string;
   initialize(): Promise<void>;
-
-  handleRequest(request: GatewayRequest): Promise<GatewayResponse>;
-
+  proxyRequest(req: Request, res: Response, targetUrl: string): Promise<void>;
   shutdown(): Promise<void>;
 }
