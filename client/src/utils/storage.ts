@@ -53,7 +53,7 @@ export const getUser = (): User | null => {
 
   try {
     return JSON.parse(userJson) as User;
-  } catch (error) {
+  } catch {
     localStorage.removeItem(STORAGE_KEYS.USER);
     return null;
   }
