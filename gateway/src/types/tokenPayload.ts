@@ -5,7 +5,7 @@ export const RoleSchema = z.enum(['user', 'admin']);
 export const TokenPayloadSchema = z.object({
   userId: z.string().uuid(),
   email: z.string().email(),
-  role: RoleSchema,
+  role: RoleSchema.optional().default('user'),
   jti: z.string().uuid(),
   iat: z.number(),
   exp: z.number(),
