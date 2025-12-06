@@ -1,4 +1,3 @@
-// Common response types
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -11,10 +10,27 @@ export interface ErrorResponse {
   error: string;
 }
 
-// User-related response types
 export interface LoginResponse {
   success: boolean;
   message: string;
+}
+
+export interface ConnectResponse {
+  success: boolean;
+  message: string;
+  connectedAt?: string;
+}
+
+export interface DisconnectResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ConnectionStatus {
+  isConnected: boolean;
+  connectedAt: string | null;
+  lastSyncAt: string | null;
+  isActive: boolean;
 }
 
 export interface UserProfile {
@@ -30,7 +46,6 @@ export interface UserProfile {
   [key: string]: any; // Garmin API may return additional fields
 }
 
-// Activity-related response types
 export interface Activity {
   activityId: number;
   activityName: string;
@@ -76,4 +91,20 @@ export interface ActivitySplit {
   elevationLoss?: number;
 }
 
-export type ActivitiesResponse = Activity[];
+export interface ActivitySummary {
+  activityId: number;
+  activityName: string;
+  activityType: string;
+  startTimeLocal: string;
+  distance: number;      // meters
+  duration: number;      // seconds
+  calories: number;
+  averageHR?: number;
+}
+
+export interface ActivitiesResponse {
+  activities: ActivitySummary[];
+  total: number;
+  start: number;
+  limit: number;
+}

@@ -1,11 +1,19 @@
-// User-related request types
 export interface LoginRequest {
   username: string;
   password: string;
 }
 
-// Metrics-related request types
+export interface ConnectRequest {
+  username: string;
+  password: string;
+}
+
 export interface GetActivitiesQuery {
+  start?: number;
+  limit?: number;
+}
+
+export interface ActivityListParams {
   start?: number;
   limit?: number;
 }
