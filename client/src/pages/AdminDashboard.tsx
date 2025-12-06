@@ -1,6 +1,7 @@
 import { useUsers } from '../hooks/useAuth';
 import { useAuthStore } from '../store/authStore';
 import { Button } from '../components/Button';
+import { Loading } from '../components/Loading';
 
 export const AdminDashboard = () => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -14,7 +15,7 @@ export const AdminDashboard = () => {
     <div>
       <div>Admin Dashboard</div>
       
-      {isLoading && <div>Loading users...</div>}
+      {isLoading && <Loading message="Loading users..." />}
       
       {error && (
         <div>
