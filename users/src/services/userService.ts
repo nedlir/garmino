@@ -23,6 +23,8 @@ export interface IUserService {
   updateProfile(userId: string, requesterId: string, updates: UpdateUserProfile): Promise<UserProfile>;
   getGarminStatus(userId: string): Promise<GarminStatus>;
   updateGarminConnection(userId: string, connection: UpdateGarminConnection): Promise<GarminConnection>;
+  createOrUpdateGarminConnection(userId: string, connection: UpdateGarminConnection): Promise<GarminConnection>;
+  disconnectGarmin(userId: string): Promise<GarminConnection>;
 }
 
 export class UserService implements IUserService {
@@ -128,6 +130,58 @@ export class UserService implements IUserService {
       return updatedConnection;
     } catch (err) {
       logger.error({ err, userId }, 'Error updating Garmin connection');
+      throw err;
+    }
+  }
+
+  async createOrUpdateGarminConnection(
+    userId: string,
+    connection: UpdateGarminConnection
+  ): Promise<GarminConnection> {
+    try {
+      logger.info({ userId }, 'Creating or updating Garmin connection');
+
+      const existingConnection = await garminConnectionRepository.findByUserId(userId);
+
+      if (!existingConnection) {
+        const newConnection = await garminConnectionRepository.create({
+          user_id: userId,
+          garmin_oauth1_token: connection.garmin_oauth1_token,
+          garmin_oauth2_token: connection.garmin_oauth2_token,
+        });
+        return newConnection;
+      }
+
+      const updatedConnection = await garminConnectionRepository.updateByUserId(userId, connection);
+
+      if (!updatedConnection) {
+        logger.error({ userId }, 'Failed to update existing Garmin connection');
+        throw new Error('Failed to update Garmin connection');
+      }
+
+      return updatedConnection;
+    } catch (err) {
+      logger.error({ err, userId }, 'Error creating or updating Garmin connection');
+      throw err;
+    }
+  }
+
+  async disconnectGarmin(userId: string): Promise<GarminConnection> {
+    try {
+      logger.info({ userId }, 'Disconnecting Garmin account');
+
+      const clearedConnection = await garminConnectionRepository.clearTokens(userId);
+
+      if (!clearedConnection) {
+        logger.warn({ userId }, 'Garmin connection not found for disconnect');
+        const error = new Error('Garmin connection not found');
+        (error as any).statusCode = 404;
+        throw error;
+      }
+
+      return clearedConnection;
+    } catch (err) {
+      logger.error({ err, userId }, 'Error disconnecting Garmin account');
       throw err;
     }
   }

@@ -115,23 +115,17 @@ export const updateGarminConnection = async (req: Request, res: Response): Promi
 
     logger.info({ userId }, 'Updating Garmin connection');
 
-    const existingConnection = await userService.getGarminStatus(userId);
-
-    if (!existingConnection.isConnected) {
-      // Create new connection
-      const { create } = await import('../db/repositories/garminConnectionRepository');
-      const connection = await create({
-        user_id: userId,
-        garmin_oauth1_token: req.body.garmin_oauth1_token,
-        garmin_oauth2_token: req.body.garmin_oauth2_token,
+    if (!req.body.garmin_oauth1_token && !req.body.garmin_oauth2_token) {
+      res.status(400).json({
+        error: 'Bad Request',
+        message: 'At least one token field must be provided',
       });
-      res.status(200).json(connection);
       return;
     }
 
-    const updatedConnection = await userService.updateGarminConnection(userId, req.body);
+    const connection = await userService.createOrUpdateGarminConnection(userId, req.body);
 
-    res.status(200).json(updatedConnection);
+    res.status(200).json(connection);
   } catch (err: any) {
     if (err.statusCode === 404) {
       res.status(404).json({

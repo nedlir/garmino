@@ -141,3 +141,57 @@ export const deleteByUserId = async (userId: string): Promise<boolean> => {
     throw err;
   }
 };
+
+
+export const createOrUpdate = async (data: CreateGarminConnection): Promise<GarminConnection> => {
+  try {
+    const validated = CreateGarminConnectionSchema.parse(data);
+
+    const result = await pool.query(
+      `INSERT INTO garmin_connections (user_id, garmin_oauth1_token, garmin_oauth2_token, connected_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id) 
+       DO UPDATE SET 
+         garmin_oauth1_token = EXCLUDED.garmin_oauth1_token,
+         garmin_oauth2_token = EXCLUDED.garmin_oauth2_token,
+         connected_at = NOW(),
+         is_active = true,
+         updated_at = NOW()
+       RETURNING *`,
+      [
+        validated.user_id,
+        validated.garmin_oauth1_token ?? null,
+        validated.garmin_oauth2_token ?? null,
+      ]
+    );
+
+    return GarminConnectionSchema.parse(result.rows[0]);
+  } catch (err) {
+    logger.error({ err, data }, 'Error creating or updating Garmin connection');
+    throw err;
+  }
+};
+
+export const clearTokens = async (userId: string): Promise<GarminConnection | null> => {
+  try {
+    const result = await pool.query(
+      `UPDATE garmin_connections 
+       SET garmin_oauth1_token = NULL,
+           garmin_oauth2_token = NULL,
+           is_active = false,
+           updated_at = NOW()
+       WHERE user_id = $1
+       RETURNING *`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return null;
+    }
+
+    return GarminConnectionSchema.parse(result.rows[0]);
+  } catch (err) {
+    logger.error({ err, userId }, 'Error clearing Garmin connection tokens');
+    throw err;
+  }
+};
