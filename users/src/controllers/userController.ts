@@ -108,3 +108,43 @@ export const getGarminStatus = async (req: Request, res: Response): Promise<void
     });
   }
 };
+
+export const updateGarminConnection = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    logger.info({ userId }, 'Updating Garmin connection');
+
+    const existingConnection = await userService.getGarminStatus(userId);
+
+    if (!existingConnection.isConnected) {
+      // Create new connection
+      const { create } = await import('../db/repositories/garminConnectionRepository');
+      const connection = await create({
+        user_id: userId,
+        garmin_oauth1_token: req.body.garmin_oauth1_token,
+        garmin_oauth2_token: req.body.garmin_oauth2_token,
+      });
+      res.status(200).json(connection);
+      return;
+    }
+
+    const updatedConnection = await userService.updateGarminConnection(userId, req.body);
+
+    res.status(200).json(updatedConnection);
+  } catch (err: any) {
+    if (err.statusCode === 404) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: err.message,
+      });
+      return;
+    }
+
+    logger.error({ err, userId: req.params.userId }, 'Error in updateGarminConnection controller');
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred',
+    });
+  }
+};
