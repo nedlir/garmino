@@ -1,5 +1,6 @@
 import { useUsers } from '../hooks/useAuth';
 import { useAuthStore } from '../store/authStore';
+import { Button } from '../components/Button';
 
 export const AdminDashboard = () => {
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -32,7 +33,7 @@ export const AdminDashboard = () => {
         </div>
       )}
       
-      <button onClick={handleLogout}>Logout</button>
+      <Button onClick={handleLogout}>Logout</Button>
     </div>
   );
 };
