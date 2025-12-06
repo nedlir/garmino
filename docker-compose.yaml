@@ -65,6 +65,21 @@ services:
       - ./users/src:/app/src
       - users-node-modules:/app/node_modules
 
+  garmin-connect:
+    build:
+      context: ./garmin-connect
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      PORT: 3003
+      USER_SERVICE_URL: http://users:3002
+    depends_on:
+      - users
+    volumes:
+      - ./garmin-connect:/app
+      - garmin-connect-node-modules:/app/node_modules
+
   gateway:
     build:
       context: ./gateway
@@ -82,6 +97,7 @@ services:
       - redis
       - auth
       - users
+      - garmin-connect
     volumes:
       - ./gateway/src:/app/src
       - gateway-node-modules:/app/node_modules
@@ -113,4 +129,5 @@ volumes:
   auth-node-modules:
   users-node-modules:
   gateway-node-modules:
+  garmin-connect-node-modules:
   client-node-modules:

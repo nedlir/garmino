@@ -17,7 +17,28 @@ export const getActivities = async (
     const { start = 0, limit = 20 } = req.query;
     const client = getGarminClient();
     const activities = await client.getActivities(Number(start), Number(limit));
-    res.json(activities as ActivitiesResponse);
+    
+    const activitySummaries = (activities || []).map((activity: any) => ({
+      activityId: activity.activityId,
+      activityName: activity.activityName,
+      activityType: typeof activity.activityType === 'object' 
+        ? activity.activityType.typeKey 
+        : activity.activityType,
+      startTimeLocal: activity.startTimeLocal,
+      distance: activity.distance,
+      duration: activity.duration,
+      calories: activity.calories,
+      averageHR: activity.averageHR,
+    }));
+    
+    const response: ActivitiesResponse = {
+      activities: activitySummaries,
+      total: activitySummaries.length,
+      start: Number(start),
+      limit: Number(limit),
+    };
+    
+    res.json(response);
   } catch (error: any) {
     res
       .status(500)

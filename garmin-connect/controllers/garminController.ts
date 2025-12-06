@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { GarminConnect } from "@gooin/garmin-connect";
 import { GarminSessionManager } from "../services/GarminSessionManager";
 import * as userServiceClient from "../services/userServiceClient";
 import {
@@ -13,6 +14,8 @@ import {
 } from "../types";
 
 const sessionManager = new GarminSessionManager();
+
+const authenticatedClients: Map<string, GarminConnect> = new Map();
 
 /**
  * POST /api/garmin/connect
@@ -38,43 +41,44 @@ export const connect = async (
     if (!username || !password) {
       res.status(400).json({
         success: false,
+        error: "Username and password are required",
+      });
+      return;
+    }
+
+    const client = new GarminConnect({ username, password });
+    
+    try {
+      await client.login();
+    } catch (error: any) {
+      console.error("Garmin authentication failed:", error.message);
+      res.status(401).json({
+        success: false,
         error: "Invalid Garmin username or password",
       });
       return;
     }
 
-    // Create and authenticate Garmin client
+    authenticatedClients.set(userId, client);
+
+    const tokens = client.exportToken();
+    
+    // Try to store tokens in User Service (non-blocking)
     try {
-      const client = await sessionManager.createClient(userId, {
-        username,
-        password,
-      });
-
-      // Get the session tokens
-      const sessionData = sessionManager.getSerializedSession(userId);
-      
-      if (!sessionData) {
-        throw new Error("Failed to retrieve session data");
-      }
-
-      // Store tokens in User Service
       await userServiceClient.storeGarminTokens(userId, {
-        oauth1: JSON.stringify(sessionData.oauth1),
-        oauth2: JSON.stringify(sessionData.oauth2),
-      });
-
-      res.json({
-        success: true,
-        message: "Successfully connected to Garmin Connect",
-        connectedAt: new Date().toISOString(),
+        oauth1: JSON.stringify(tokens.oauth1),
+        oauth2: JSON.stringify(tokens.oauth2),
       });
     } catch (error: any) {
-      // Authentication failed
-      res.status(401).json({
-        success: false,
-        error: "Invalid Garmin username or password",
-      });
+      console.error("Failed to store tokens in User Service:", error.message);
+      // Continue - tokens are in memory
     }
+
+    res.json({
+      success: true,
+      message: "Successfully connected to Garmin Connect",
+      connectedAt: new Date().toISOString(),
+    });
   } catch (error: any) {
     console.error("Error in connect:", error);
     res.status(500).json({
@@ -83,6 +87,10 @@ export const connect = async (
     });
   }
 };
+
+export function getAuthenticatedClient(userId: string): GarminConnect | undefined {
+  return authenticatedClients.get(userId) || sessionManager.getClient(userId);
+}
 
 
 export const disconnect = async (
