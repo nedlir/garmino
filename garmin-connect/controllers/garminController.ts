@@ -7,6 +7,9 @@ import {
   DisconnectResponse,
   ConnectionStatus,
   ErrorResponse,
+  ActivityListParams,
+  ActivitiesResponse,
+  ActivitySummary,
 } from "../types";
 
 const sessionManager = new GarminSessionManager();
@@ -81,10 +84,7 @@ export const connect = async (
   }
 };
 
-/**
- * POST /api/garmin/disconnect
- * Disconnect a user's Garmin account
- */
+
 export const disconnect = async (
   req: Request,
   res: Response<DisconnectResponse | ErrorResponse>
@@ -100,10 +100,8 @@ export const disconnect = async (
       return;
     }
 
-    // Remove client from session manager
     sessionManager.removeClient(userId);
 
-    // Clear tokens in User Service
     await userServiceClient.clearGarminTokens(userId);
 
     res.json({
@@ -119,10 +117,7 @@ export const disconnect = async (
   }
 };
 
-/**
- * GET /api/garmin/status
- * Get Garmin connection status for a user
- */
+
 export const getStatus = async (
   req: Request,
   res: Response<ConnectionStatus | ErrorResponse>
@@ -138,12 +133,118 @@ export const getStatus = async (
       return;
     }
 
-    // Get status from User Service
     const status = await userServiceClient.getGarminStatus(userId);
 
     res.json(status);
   } catch (error: any) {
     console.error("Error in getStatus:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message || "An unexpected error occurred",
+    });
+  }
+};
+
+
+export const getActivities = async (
+  req: Request<{}, ActivitiesResponse | ErrorResponse, {}, ActivityListParams>,
+  res: Response<ActivitiesResponse | ErrorResponse>
+) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!userId) {
+      res.status(401).json({
+        success: false,
+        error: "User ID not found in request headers",
+      });
+      return;
+    }
+
+    // Parse pagination parameters
+    const start = req.query.start ? parseInt(String(req.query.start)) : 0;
+    const limit = req.query.limit ? parseInt(String(req.query.limit)) : 20;
+
+    const status = await userServiceClient.getGarminStatus(userId);
+    
+    if (!status.isConnected || !status.isActive) {
+      res.status(401).json({
+        success: false,
+        error: "NOT_CONNECTED",
+      });
+      return;
+    }
+
+    const tokens = await userServiceClient.getGarminTokens(userId);
+    
+    if (!tokens) {
+      res.status(401).json({
+        success: false,
+        error: "No active Garmin connection. Please connect your account.",
+      });
+      return;
+    }
+
+    let client = sessionManager.getClient(userId);
+    
+    if (!client) {
+      // Restore client from stored tokens
+      try {
+        const oauth1 = JSON.parse(tokens.oauth1);
+        const oauth2 = JSON.parse(tokens.oauth2);
+        client = sessionManager.restoreClient(userId, { oauth1, oauth2 });
+      } catch (error) {
+        res.status(401).json({
+          success: false,
+          error: "Failed to restore Garmin session. Please reconnect your account.",
+        });
+        return;
+      }
+    }
+
+    try {
+      const activities = await client.getActivities(start, limit);
+      
+      // Transform activities to match our ActivitySummary interface
+      const activitySummaries: ActivitySummary[] = activities.map((activity: any) => ({
+        activityId: activity.activityId,
+        activityName: activity.activityName,
+        activityType: activity.activityType?.typeKey || activity.activityType || "unknown",
+        startTimeLocal: activity.startTimeLocal,
+        distance: activity.distance || 0,
+        duration: activity.duration || 0,
+        calories: activity.calories || 0,
+        averageHR: activity.averageHR,
+      }));
+
+      // Update last sync time
+      await userServiceClient.storeGarminTokens(userId, {
+        oauth1: tokens.oauth1,
+        oauth2: tokens.oauth2,
+      });
+
+      res.json({
+        activities: activitySummaries,
+        total: activitySummaries.length,
+        start,
+        limit,
+      });
+    } catch (error: any) {
+      // Check if it's a session expiry error
+      if (error.message?.includes("401") || error.message?.includes("unauthorized")) {
+        sessionManager.removeClient(userId);
+        
+        res.status(401).json({
+          success: false,
+          error: "Garmin session expired. Please reconnect your account.",
+        });
+        return;
+      }
+      
+      throw error;
+    }
+  } catch (error: any) {
+    console.error("Error in getActivities:", error);
     res.status(500).json({
       success: false,
       error: error.message || "An unexpected error occurred",
